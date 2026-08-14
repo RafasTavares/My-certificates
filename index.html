@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rafael Tavares — Certificados</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface-hover: #22263a;
+      --border: #2e3248;
+      --accent: #6c63ff;
+      --accent-light: #8b85ff;
+      --text: #e8eaf6;
+      --text-muted: #7b7f9e;
+      --tag-bg: #23274a;
+      --radius: 12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1a1d27 0%, #12152a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 24px 40px;
+      text-align: center;
+    }
+    header h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700; letter-spacing: -0.5px; }
+    header h1 span { color: var(--accent-light); }
+    header p { margin-top: 8px; color: var(--text-muted); font-size: 1rem; }
+    .stats { display: flex; justify-content: center; gap: 32px; margin-top: 28px; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat strong { display: block; font-size: 1.6rem; font-weight: 700; color: var(--accent-light); }
+    .stat span { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── Controls ── */
+    .controls {
+      max-width: 1100px;
+      margin: 32px auto 0;
+      padding: 0 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    .search-wrap { flex: 1; min-width: 220px; position: relative; }
+    .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+    #search {
+      width: 100%;
+      padding: 10px 12px 10px 38px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    #search:focus { border-color: var(--accent); }
+    #search::placeholder { color: var(--text-muted); }
+
+    .filter-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--tag-bg);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    .tag:hover { border-color: var(--accent); color: var(--text); }
+    .tag.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ── Count ── */
+    .result-count {
+      max-width: 1100px;
+      margin: 20px auto 0;
+      padding: 0 24px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* ── Grid ── */
+    main {
+      max-width: 1100px;
+      margin: 20px auto 60px;
+      padding: 0 24px;
+    }
+
+    .category { margin-bottom: 48px; }
+    .category-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .category-icon { font-size: 1.4rem; }
+    .category-title { font-size: 1.1rem; font-weight: 600; }
+    .category-count {
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      background: var(--tag-bg);
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform .2s, border-color .2s, box-shadow .2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      box-shadow: 0 8px 32px rgba(108, 99, 255, 0.15);
+    }
+    .card-icon {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent) 0%, #9c63ff 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      line-height: 1.4;
+      flex: 1;
+    }
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+    .card-meta svg { flex-shrink: 0; }
+
+    /* empty state */
+    .empty {
+      display: none;
+      text-align: center;
+      padding: 80px 24px;
+      color: var(--text-muted);
+    }
+    .empty.visible { display: block; }
+    .empty svg { margin-bottom: 16px; opacity: .4; }
+    .empty p { font-size: 1rem; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+    footer a { color: var(--accent-light); text-decoration: none; }
+
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Rafael Tavares <span>/ Certificados</span></h1>
+  <p>Portfólio de certificações e cursos concluídos</p>
+  <div class="stats">
+    <div class="stat"><strong id="total-count">0</strong><span>Certificados</span></div>
+    <div class="stat"><strong id="category-count">0</strong><span>Categorias</span></div>
+    <div class="stat"><strong>2013 – 2026</strong><span>Período</span></div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="search-wrap">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+    </svg>
+    <input id="search" type="search" placeholder="Buscar certificado..." />
+  </div>
+  <div class="filter-tags" id="filter-tags">
+    <button class="tag active" data-filter="all">Todos</button>
+  </div>
+</div>
+
+<p class="result-count" id="result-count"></p>
+
+<main id="main"></main>
+
+<div class="empty" id="empty">
+  <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+  </svg>
+  <p>Nenhum certificado encontrado para "<span id="empty-term"></span>"</p>
+</div>
+
+<footer>
+  <p>Gerado por <a href="https://kiro.dev" target="_blank">Kiro</a> · <a href="https://github.com/rafasmusic/My-certificates" target="_blank">Ver no GitHub</a></p>
+</footer>
+
+<script>
+const data = [
+  {
+    category: "2026 — AWS",
+    icon: "☁️",
+    filter: "aws",
+    certs: [
+      { title: "Developing Machine Learning Solutions", date: "ago/2026", file: "2026 - AWS/08-2026 - Developing Machine Learning Solutions.pdf" },
+      { title: "Exploring Artificial Intelligence Use Cases and Applications", date: "ago/2026", file: "2026 - AWS/08-2026 - Exploring Artificial Intelligence Use Cases and Applications.pdf" },
+      { title: "Fundamentals of Machine Learning and Artificial Intelligence", date: "ago/2026", file: "2026 - AWS/08-2026 - Fundamentals of Machine Learning and Artificial Intelligence.pdf" },
+      { title: "Responsible Artificial Intelligence Practices", date: "ago/2026", file: "2026 - AWS/08-2026 - Responsible Artificial Intelligence Practices.pdf" },
+    ]
+  },
+  {
+    category: "2026 — Anthropic",
+    icon: "🤖",
+    filter: "anthropic",
+    certs: [
+      { title: "Building with the Claude API", date: "jun/2026", file: "2026 - Antropic/06-2026 - Building with the Claude API.pdf" },
+      { title: "Claude Code in Action", date: "jun/2026", file: "2026 - Antropic/06-2026 - Claude Code in Action.pdf" },
+      { title: "Introduction to Model Context Protocol", date: "jun/2026", file: "2026 - Antropic/06-2026 - Introduction to Model Context Protocol.pdf" },
+      { title: "Introduction to Agent Skills", date: "jun/2026", file: "2026 - Antropic/06-2026 - Introduction to agent skills.pdf" },
+    ]
+  },
+  {
+    category: "2026 — Zup Innovation",
+    icon: "🚀",
+    filter: "zup",
+    certs: [
+      { title: "Engenharia de Prompts", date: "2025", file: "2026 - Zup Innovation/2025 - Engenharia de Prompts.pdf" },
+      { title: "Future Minds — BIT", date: "2025", file: "2026 - Zup Innovation/2025 - Future Minds - BIT.pdf" },
+      { title: "Future Minds — BYTE", date: "2025", file: "2026 - Zup Innovation/2025 - Future Minds - BYTE.pdf" },
+      { title: "Future Minds — TERABYTE", date: "2025", file: "2026 - Zup Innovation/2025 - Future Minds - TERABYTE.pdf" },
+      { title: "Security Champions", date: "2025", file: "2026 - Zup Innovation/2025 - ZUP - Security Champions.pdf" },
+    ]
+  },
+  {
+    category: "LinkedIn Learning",
+    icon: "🎓",
+    filter: "linkedin",
+    certs: [
+      { title: "Agile Development Practices", file: "LN Learning/CertificateOfCompletion_Agile Development Practices.pdf" },
+      { title: "Android App Development — Design Patterns For Mobile Architecture", file: "LN Learning/CertificateOfCompletion_Android App Development Design Patterns For Mobile Architecture.pdf" },
+      { title: "C# Design Patterns Part 1", file: "LN Learning/CertificateOfCompletion_C Sharp Design Patterns Part 1.pdf" },
+      { title: "Creating Projects For Interactive Data Visualization With Processing", file: "LN Learning/CertificateOfCompletion_Creating Projects For Interactive Data Visualization With Processing.pdf" },
+      { title: "CSS Advanced Layouts With Grid", file: "LN Learning/CertificateOfCompletion_Css Advanced Layouts With Grid.pdf" },
+      { title: "Data Science Analytics Career Paths & Certifications: First Steps", file: "LN Learning/CertificateOfCompletion_Data Science Analytics Career Paths Certifications First Steps 3.pdf" },
+      { title: "Data Science Foundations: Data Engineering", file: "LN Learning/CertificateOfCompletion_Data Science Foundations Data Engineering.pdf" },
+      { title: "Data Science Foundations: Data Mining", file: "LN Learning/CertificateOfCompletion_Data Science Foundations Data Mining.pdf" },
+      { title: "Data Science Foundations: Fundamentals", file: "LN Learning/CertificateOfCompletion_Data Science Foundations Fundamentals.pdf" },
+      { title: "Data Visualization Best Practices", file: "LN Learning/CertificateOfCompletion_Data Visualization Best Practices.pdf" },
+      { title: "Data Visualization in R with ggplot2", file: "LN Learning/CertificateOfCompletion_Data Visualization In R With Ggplot2.pdf" },
+      { title: "Data Visualization Storytelling", file: "LN Learning/CertificateOfCompletion_Data Visualization Storytelling.pdf" },
+      { title: "Designing a Data Visualization", file: "LN Learning/CertificateOfCompletion_Designing A Data Visualization.pdf" },
+      { title: "Designing a Presentation", file: "LN Learning/CertificateOfCompletion_Designing A Presentation.pdf" },
+      { title: "Excel 2010 Real World Projects", file: "LN Learning/CertificateOfCompletion_Excel 2010 Real World Projects.pdf" },
+      { title: "Excel 2016 Managing and Analyzing Data", file: "LN Learning/CertificateOfCompletion_Excel 2016 Managing And Analyzing Data.pdf" },
+      { title: "Fundamentos da Melhoria de Processos", file: "LN Learning/CertificateOfCompletion_Fundamentos Da Melhoria De Processos.pdf" },
+      { title: "Fundamentos de Gestão Ágil de Projetos", file: "LN Learning/CertificateOfCompletion_Fundamentos De Gestao Agil De Projetos.pdf" },
+      { title: "Google Data Studio: First Look", file: "LN Learning/CertificateOfCompletion_Google Data Studio First Look.pdf" },
+      { title: "HTML for Educators", file: "LN Learning/CertificateOfCompletion_Html For Educators.pdf" },
+      { title: "Learning Data Governance", file: "LN Learning/CertificateOfCompletion_Learning Data Governance.pdf" },
+      { title: "Learning React Native 2", file: "LN Learning/CertificateOfCompletion_Learning React Native 2.pdf" },
+      { title: "Learning Secure Payments and PCI", file: "LN Learning/CertificateOfCompletion_Learning Secure Payments and PCI.pdf" },
+      { title: "Microsoft Azure for Developers", file: "LN Learning/CertificateOfCompletion_Microsoft Azure For Developers.pdf" },
+      { title: "Planning a Microsoft Cloud Solution 2016", file: "LN Learning/CertificateOfCompletion_Planning A Microsoft Cloud Solution 2016.pdf" },
+      { title: "Processing: Interactive Data Visualization", file: "LN Learning/CertificateOfCompletion_Processing Interactive Data Visualization.pdf" },
+      { title: "R: Interactive Visualizations with htmlwidgets", file: "LN Learning/CertificateOfCompletion_R Interactive Visualizations With Htmlwidgets.pdf" },
+      { title: "Ruby Essential Training", file: "LN Learning/CertificateOfCompletion_Ruby Essential Training.pdf" },
+      { title: "Statistics Foundations 1", file: "LN Learning/CertificateOfCompletion_Statistics Foundations 1.pdf" },
+      { title: "Visual Communication for Business", file: "LN Learning/CertificateOfCompletion_Visual Communication For Business The Marketer S Secret Weapon.pdf" },
+    ]
+  },
+  {
+    category: "Microsoft Virtual Academy",
+    icon: "🪟",
+    filter: "mva",
+    certs: [
+      { title: "AppDay — Sua primeira App para Windows 8", file: "MVA - Microsoft Virtual Academy/MVA - AppDay - A sua primeira App para Windows 8.pdf" },
+      { title: "Aprenda como Licenciar seu Ambiente", file: "MVA - Microsoft Virtual Academy/MVA - Aprenda como Licenciar seu Ambiente.pdf" },
+      { title: "Como Participar da Imagine Cup", file: "MVA - Microsoft Virtual Academy/MVA - Como Participar da Imagine Cup.pdf" },
+      { title: "Conceitos básicos de BI com SQL Server 2014", file: "MVA - Microsoft Virtual Academy/MVA - Conceitos básicos de BI - Business Intelligence - com SQL Server 2014.pdf" },
+      { title: "Construindo aplicações web com WebMatrix", file: "MVA - Microsoft Virtual Academy/MVA - Construindo aplicações web com WebMatrix.pdf" },
+      { title: "Crie seu primeiro aplicativo com Windows App Studio", file: "MVA - Microsoft Virtual Academy/MVA - Crie seu primeiro aplicativo com Windows App Studio.pdf" },
+      { title: "Entendendo desenvolvimento para Windows Phone 7", file: "MVA - Microsoft Virtual Academy/MVA - Entendendo desenvolvimento para o Windows Phone 7.pdf" },
+      { title: "Entendendo o Windows Azure", file: "MVA - Microsoft Virtual Academy/MVA - Entendendo o Windows Azure.pdf" },
+      { title: "Fundamentos de Computação em Nuvem", file: "MVA - Microsoft Virtual Academy/MVA - Fundamentos de Computação em Nuvem.pdf" },
+      { title: "Fundamentos do Entity Framework 4", file: "MVA - Microsoft Virtual Academy/MVA - Fundamentos do Entity Framework 4-Rafael.pdf" },
+      { title: "Fundamentos do Desenvolvimento de Software", file: "MVA - Microsoft Virtual Academy/MVA - Fundamentos do desenvolvimento de software.pdf" },
+      { title: "Fundamentos em Desenvolvimento de Software", file: "MVA - Microsoft Virtual Academy/MVA - Fundamentos em Desenvolvimento de Software.pdf" },
+      { title: "HTML5 — Homologado pelo W3C", file: "MVA - Microsoft Virtual Academy/MVA - HTML5 - Homologado pelo W3C .pdf" },
+      { title: "Implementando Segurança no Windows 8", file: "MVA - Microsoft Virtual Academy/MVA - Implementando Segurança no Windows 8.pdf" },
+      { title: "Introdução ao desenvolvimento de aplicativos móveis", file: "MVA - Microsoft Virtual Academy/MVA - Introdução ao desenvolvimento de aplicativos móveis.pdf" },
+      { title: "Introdução ao desenvolvimento para Windows 8", file: "MVA - Microsoft Virtual Academy/MVA - Introdução ao desenvolvimento para Windows 8.pdf" },
+      { title: "Introdução rápida ao desenvolvimento em HTML5 com JavaScript e CSS3", file: "MVA - Microsoft Virtual Academy/MVA - Introdução rápida ao desenvolvimento em HTML5 com JavaScript e CSS3.pdf" },
+      { title: "Introdução à Business Intelligence", file: "MVA - Microsoft Virtual Academy/MVA - Introdução à Business Intelligence.pdf" },
+      { title: "Migrando máquinas virtuais do AWS para Windows Azure", file: "MVA - Microsoft Virtual Academy/MVA - Migrando máquinas virtuais do AWS para Windows Azure.pdf" },
+      { title: "Portando Apps Android para Windows Phone", file: "MVA - Microsoft Virtual Academy/MVA - Portando Apps Android para Windows Phone.pdf" },
+      { title: "Sites Fixos com Internet Explorer 9", file: "MVA - Microsoft Virtual Academy/MVA - Sites Fixos com Internet Explorer 9.pdf" },
+      { title: "Utilizando e Configurando o Windows Phone 8", file: "MVA - Microsoft Virtual Academy/MVA - Utilizando e Configurando o Windows Phone 8.pdf" },
+    ]
+  },
+  {
+    category: "MCP — Microsoft Certified Professional",
+    icon: "🏆",
+    filter: "mcp",
+    certs: [
+      { title: "MTA — Microsoft Technology Associate", date: "2019", file: "MCP - Microsoft Certificate Professional/MTA - 2019.pdf" },
+    ]
+  },
+  {
+    category: "Eventos e Conferências",
+    icon: "🎤",
+    filter: "eventos",
+    certs: [
+      { title: "FRONT IN ARACAJU 2013", date: "ago/2013", file: "31-08-2013 - FRONT IN ARACAJU - 2013.pdf" },
+      { title: "15 SEMPESQ — A difusão da ciência para a cidadania", date: "out/2013", file: "28-10-2013 - 15 SEMPESQ - A difusão da ciência para a cidadania.pdf" },
+      { title: "8 SEMEX — Semana de Extensão", date: "mar/2014", file: "24-03-2014 - 8 SEMEX - Semana de Extensão.pdf" },
+      { title: "BRAPPS", date: "abr/2014", file: "25-04-2014 - BRAPPS.pdf" },
+      { title: "FRONT IN ARACAJU — Rock and Code", date: "ago/2014", file: "02-08-2014 - FRONT IN ARACAJU - Rock and Code.pdf" },
+      { title: "11 SEMINFO — Desafios da Computação", date: "set/2014", file: "12-09-2014 - 11 SEMINFO - Desafios da Computação.pdf" },
+      { title: "Dev Fest Nordeste", date: "out/2014", file: "18-10-2014 - Certificado Dev Fest Nordeste-Rafael.pdf" },
+      { title: "Campus Party 2015", date: "fev/2015", file: "03-02-2015 - Campus Party 2015.pdf" },
+      { title: "ROADSEC 15", date: "jun/2015", file: "13-06-2015 -  ROADSEC 15.pdf" },
+      { title: "Student to Business 2015", date: "jul/2015", file: "27-07-2015 - Student to Bussiness.pdf" },
+      { title: "ERBASE — Introdução ao Desenvolvimento em Realidade Virtual", file: "ERBASE - Introdução ao Desenvolvimento em Realidade Virtual.pdf" },
+      { title: "ERBASE — Certificado", file: "ERBASE - Certificado - Rafael.pdf" },
+      { title: "WEPGCOMP", file: "WEPGCOMP - Rafael Tavares.pdf" },
+    ]
+  },
+  {
+    category: "Cursos e Certificações Avulsas",
+    icon: "📜",
+    filter: "outros",
+    certs: [
+      { title: "Curso Android — Getinfo Módulo I", date: "dez/2014", file: "02-12-2014 - Curso Android - Getinfo - Modulo I.pdf" },
+      { title: "Proficiência em Inglês", date: "mai/2019", file: "30-05-2019 - Proficiencia Ingles - Rafael Tavares Andrade Toledo.pdf" },
+      { title: "Student to Business 2015 — Participação", date: "2015", file: "Rafael_Tavares_S2B-2015.2.pdf" },
+    ]
+  },
+];
+
+// ── Render ──────────────────────────────────────────────────────────────────
+
+const main = document.getElementById("main");
+const filterTags = document.getElementById("filter-tags");
+const searchInput = document.getElementById("search");
+const resultCount = document.getElementById("result-count");
+const emptyState = document.getElementById("empty");
+const emptyTerm = document.getElementById("empty-term");
+
+let activeFilter = "all";
+let searchTerm = "";
+
+// Build filter tags
+data.forEach(cat => {
+  const btn = document.createElement("button");
+  btn.className = "tag";
+  btn.dataset.filter = cat.filter;
+  btn.textContent = cat.category.split("—")[0].trim().replace(/^2026 /, "");
+  filterTags.appendChild(btn);
+});
+
+// Build DOM
+function render() {
+  main.innerHTML = "";
+  let total = 0;
+  let visible = 0;
+
+  data.forEach(cat => {
+    const filtered = cat.certs.filter(c => {
+      const matchFilter = activeFilter === "all" || activeFilter === cat.filter;
+      const matchSearch = !searchTerm || c.title.toLowerCase().includes(searchTerm);
+      return matchFilter && matchSearch;
+    });
+
+    if (filtered.length === 0) return;
+    visible += filtered.length;
+
+    const section = document.createElement("section");
+    section.className = "category";
+    section.innerHTML = `
+      <div class="category-header">
+        <span class="category-icon">${cat.icon}</span>
+        <span class="category-title">${cat.category}</span>
+        <span class="category-count">${filtered.length}</span>
+      </div>
+      <div class="grid" id="grid-${cat.filter}"></div>
+    `;
+    main.appendChild(section);
+
+    const grid = section.querySelector(".grid");
+    filtered.forEach(cert => {
+      const a = document.createElement("a");
+      a.className = "card";
+      a.href = encodeURIPath(cert.file);
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.setAttribute("aria-label", `Abrir certificado: ${cert.title}`);
+      a.innerHTML = `
+        <div class="card-icon">📄</div>
+        <div class="card-title">${cert.title}</div>
+        ${cert.date ? `<div class="card-meta">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          ${cert.date}
+        </div>` : ""}
+      `;
+      grid.appendChild(a);
+    });
+  });
+
+  // count stats
+  total = data.reduce((s, c) => s + c.certs.length, 0);
+  document.getElementById("total-count").textContent = total;
+  document.getElementById("category-count").textContent = data.length;
+
+  const showing = searchTerm || activeFilter !== "all"
+    ? `Exibindo ${visible} de ${total} certificados`
+    : `${total} certificados`;
+  resultCount.textContent = showing;
+
+  emptyState.classList.toggle("visible", visible === 0);
+  emptyTerm.textContent = searchTerm;
+}
+
+function encodeURIPath(path) {
+  return path.split("/").map(encodeURIComponent).join("/");
+}
+
+// ── Events ──────────────────────────────────────────────────────────────────
+
+filterTags.addEventListener("click", e => {
+  if (!e.target.matches(".tag")) return;
+  document.querySelectorAll(".tag").forEach(t => t.classList.remove("active"));
+  e.target.classList.add("active");
+  activeFilter = e.target.dataset.filter;
+  render();
+});
+
+searchInput.addEventListener("input", e => {
+  searchTerm = e.target.value.trim().toLowerCase();
+  // when searching, reset filter to all
+  if (searchTerm) {
+    activeFilter = "all";
+    document.querySelectorAll(".tag").forEach(t => t.classList.remove("active"));
+    document.querySelector("[data-filter='all']").classList.add("active");
+  }
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
